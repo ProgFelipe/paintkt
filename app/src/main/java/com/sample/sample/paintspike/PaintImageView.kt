@@ -56,10 +56,10 @@ class PaintImageView @JvmOverloads constructor(
     private var mid = PointF()
     private var oldDist = 1f
     // These matrices will be used to move and zoom image
-    private var mSavedMatrix = Matrix()
+    private var mScrollAndDragMatrix = Matrix()
     private var painStroke = DEFAULT_STROKE
 
-    var scaleFactor : Float = 3f
+    var scaleFactor : Float = 1f
     private var mScaling = false
 
     companion object {
@@ -187,7 +187,7 @@ class PaintImageView @JvmOverloads constructor(
         distanceX: Float,
         distanceY: Float
     ): Boolean {
-        mSavedMatrix.postTranslate(-distanceX, -distanceY)
+        mScrollAndDragMatrix.postTranslate(-distanceX, -distanceY)
         invalidate()
         return true
     }
@@ -257,8 +257,8 @@ class PaintImageView @JvmOverloads constructor(
             upy = getPointerCoordinates(event)[1]
             //mCanvas.drawLine(downx, downy, upx, upy, mPaint)
 
-            mLastPath.lineTo(event.x, event.y)
-            //mLastPath.lineTo(downx, downy)
+            //mLastPath.lineTo(event.x, event.y)
+            mLastPath.lineTo(downx, downy)
 
             invalidate()
             downx = upx
@@ -267,11 +267,12 @@ class PaintImageView @JvmOverloads constructor(
             if(mScaling) {
                 val newDist = spacing(event)
                 if (newDist > 10f) {
-                    paintMatrix.set(mSavedMatrix)
+                    paintMatrix.set(mScrollAndDragMatrix)
                     val scale = newDist / oldDist
-                    painStroke = DEFAULT_STROKE.div(scale)
-                    mPaint.strokeWidth = painStroke
+                    //mPaint.strokeWidth = painStroke
                     paintMatrix.postScale(scale, scale, mid.x, mid.y)
+                    imageMatrix.postScale(scale, scale, mid.x, mid.y)
+
                 }
             }
         }
@@ -288,10 +289,9 @@ class PaintImageView @JvmOverloads constructor(
 
     private fun actionDown(event: MotionEvent){
         getNewPathPen()
-        mLastPath.moveTo(event.x, event.y)
 
         //For Zoom
-        mSavedMatrix.set(paintMatrix)
+        mScrollAndDragMatrix.set(paintMatrix)
         start.set(event.x, event.y)
 
         mode = DRAG
@@ -299,6 +299,8 @@ class PaintImageView @JvmOverloads constructor(
         //Draw
         downx = getPointerCoordinates(event)[0]
         downy = getPointerCoordinates(event)[1]
+        mLastPath.moveTo(downx, downy)
+
     }
 
     private fun actionPointerUp(){
@@ -309,7 +311,7 @@ class PaintImageView @JvmOverloads constructor(
     private fun actionPointerDown(event: MotionEvent){
         oldDist = spacing(event)
         if (oldDist > 10f) {
-            mSavedMatrix.set(paintMatrix)
+            mScrollAndDragMatrix.set(paintMatrix)
             midPoint(mid, event)
             mode = ZOOM
         }
