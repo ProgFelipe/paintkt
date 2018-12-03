@@ -49,6 +49,7 @@ class MainFragment : Fragment(){
         when(item?.itemId){
             R.id.erase ->  img_photo.enableEraseMode()
             R.id.draw -> img_photo.enableDrawMode()
+            R.id.undo -> img_photo.onUndoDraw()
         }
         return super.onOptionsItemSelected(item)
     }
