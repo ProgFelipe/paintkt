@@ -25,9 +25,9 @@ class MainFragment : Fragment(){
             View? = inflater.inflate(R.layout.fragment_main, container, false)
 
 
+    private var showFabMenuItems = true
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
 
         Glide.with(this)
             .asBitmap()
@@ -37,6 +37,28 @@ class MainFragment : Fragment(){
                     img_photo.setNewImage(resource, resource)
                 }
             })
+
+        fab_stroke.setOnClickListener {
+            if(showFabMenuItems) {
+                fab_less.show()
+                fab_more.show()
+                fab_restore.show()
+            }else{
+                fab_less.hide()
+                fab_more.hide()
+                fab_restore.hide()
+            }
+            showFabMenuItems = !showFabMenuItems
+        }
+        fab_less.setOnClickListener{
+            img_photo.decreaseStrokeSize()
+        }
+        fab_more.setOnClickListener{
+            img_photo.increaseStrokeSize()
+        }
+        fab_restore.setOnClickListener{
+            img_photo.setDefaultStroke()
+        }
     }
 
 

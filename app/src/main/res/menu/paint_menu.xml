@@ -2,15 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/erase"
-          android:icon="@android:drawable/ic_delete"
+          android:icon="@drawable/ic_erase"
           android:title="erase"
           app:showAsAction="ifRoom"/>
     <item android:id="@+id/draw"
-          android:icon="@android:drawable/btn_radio"
+          android:icon="@drawable/ic_pencil"
           android:title="draw"
           app:showAsAction="ifRoom"/>
     <item android:id="@+id/undo"
-          android:icon="@android:drawable/ic_media_previous"
+          android:icon="@drawable/ic_undo"
           android:title="undo"
           app:showAsAction="ifRoom"/>
 </menu>

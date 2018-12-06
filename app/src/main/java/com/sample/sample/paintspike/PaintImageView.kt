@@ -8,6 +8,9 @@ import android.graphics.PointF
 import android.support.v4.view.GestureDetectorCompat
 import android.view.*
 import android.view.MotionEvent
+import android.graphics.Bitmap
+
+
 
 //https://stackoverflow.com/questions/40033801/how-do-i-only-erase-the-draw-path-not-the-image-on-the-canvas-on-android
 //Erase
@@ -27,17 +30,19 @@ class PaintImageView @JvmOverloads constructor(
      * paint brushes for stroke conservation
      */
     private lateinit var mLastPath: Path
-    private var mPaint: Paint = Paint()
+    private var mPainter: Painter = Painter()
+    private var mImagePainter: Painter = Painter()
 
     private val paths = ArrayList<Path>()
-    private val paints = ArrayList<Paint>()
+    private val paints = ArrayList<Painter>()
     private val undonePaths = ArrayList<Path>()
+    private val undonePaints = ArrayList<Paint>()
 
     /**
      * Gestures to Zoom and Drag canvas matrix
      */
     private var mGestureDetector : GestureDetectorCompat? = null
-    private var mScaleGestureDetector: ScaleGestureDetector? = null
+    //private var mScaleGestureDetector: ScaleGestureDetector? = null
 
     private var downx = 0f
     private var downy = 0f
@@ -57,19 +62,19 @@ class PaintImageView @JvmOverloads constructor(
     private var oldDist = 1f
     // These matrices will be used to move and zoom image
     private var mScrollAndDragMatrix = Matrix()
-    private var painStroke = DEFAULT_STROKE
 
     var scaleFactor : Float = 1f
-    private var mScaling = false
+
+    private var mEraseMode = false
 
     companion object {
-        const val DEFAULT_STROKE = 25f
         const val NONE = 0
         const val DRAG = 1
         const val ZOOM = 2
+        const val BRUSH_STROKE_RATION = 10f
 
-        private const val MIN_ZOOM = 3f
-        private const val MAX_ZOOM = 5f
+        private const val MIN_ZOOM = 1f
+        private const val MAX_ZOOM = 10f
 
         private const val PAINT_COLOR = "#66265c88"
     }
@@ -78,44 +83,22 @@ class PaintImageView @JvmOverloads constructor(
         imageMatrix = Matrix()
         imageMatrix.setTranslate(1f, 1f)
         scaleType = ScaleType.MATRIX
-
-        createPaint()
-
         mGestureDetector = GestureDetectorCompat(context, this)
-        mScaleGestureDetector = ScaleGestureDetector(context, ScaleListener())
-
+        //mScaleGestureDetector = ScaleGestureDetector(context, ScaleListener())
         isFocusable = true
         isFocusableInTouchMode = true
-
         getNewPathPen()
     }
 
-    private var mEraseMode = false
-    private fun createPaint(){
-        mPaint.maskFilter = BlurMaskFilter(8f, BlurMaskFilter.Blur.NORMAL)
-        mPaint.isAntiAlias = true
-        mPaint.isDither = true
-        mPaint.style = Paint.Style.STROKE
-        if(mEraseMode){
-            mPaint.color = Color.parseColor("#FFFFFFFF")
-            //mPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
-        }else{
-            mPaint.color = Color.parseColor(PAINT_COLOR)
-            //mPaint.xfermode = null
-        }
-        mPaint.strokeWidth = painStroke
-        mPaint.strokeJoin = Paint.Join.MITER
-        mPaint.strokeCap = Paint.Cap.ROUND
-    }
 
-    internal inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+
+    /*internal inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
 
         override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean {
 
             lastFocusX = detector?.focusX!!
             lastFocusY = detector.focusY
 
-            mScaling = true
             return super.onScaleBegin(detector)
         }
         override fun onScale(detector: ScaleGestureDetector): Boolean {
@@ -133,9 +116,9 @@ class PaintImageView @JvmOverloads constructor(
             transformationMatrix.postScale(scaleFactor, scaleFactor)
 
             /* Adding focus shift to allow for scrolling with two pointers down. Remove it to skip this functionality. This could be done in fewer lines, but for clarity I do it this way here */
-            //Edited after comment by chochim
             val focusShiftX = focusX - lastFocusX
             val focusShiftY = focusY - lastFocusY
+            matrix.postTranslate(focusX + focusShiftX, focusY + focusShiftY)
             transformationMatrix.postTranslate(focusX + focusShiftX, focusY + focusShiftY)
             paintMatrix.postConcat(transformationMatrix)
             lastFocusX = focusX
@@ -146,40 +129,47 @@ class PaintImageView @JvmOverloads constructor(
         }
 
         override fun onScaleEnd(detector: ScaleGestureDetector?) {
-            mScaling = false
             super.onScaleEnd(detector)
         }
-    }
+    }*/
 
+    private var mScaling = false
     override fun enableEraseMode() {
+        if(!mEraseMode){
+            getNewPathPen()
+        }
         mEraseMode = true
-        //mPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
-        //mCanvas.drawColor(0, PorterDuff.Mode.CLEAR)
-
-        //mPaint.color = Color.parseColor("#FFFFFFFF")
     }
 
     override fun enableDrawMode() {
+        if(mEraseMode){
+            getNewPathPen()
+        }
         mEraseMode = false
-        //mPaint.xfermode = null
     }
 
     private lateinit var mRealBitmap : Bitmap
     fun setNewImage(alteredBitmap: Bitmap, bmp: Bitmap) {
         mRealBitmap = alteredBitmap
-        mCanvas = Canvas(alteredBitmap)
-        mCanvas.drawBitmap(bmp, imageMatrix, mPaint)
+        /*mCanvas = Canvas(alteredBitmap)
+        mCanvas.drawBitmap(bmp, imageMatrix, paint)
 
-        setImageBitmap(alteredBitmap)
+        setImageBitmap(alteredBitmap)*/
+        val canvasBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        mCanvas = Canvas(canvasBitmap)
+        invalidate()
+        /*mCanvas = Canvas()
+        val mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        mCanvas.setBitmap(mBitmap)*/
     }
 
-    fun restoreBitmap(){
+    /*fun restoreBitmap(){
         imageMatrix = Matrix()
         imageMatrix.setTranslate(1f, 1f)
         mCanvas = Canvas(mRealBitmap)
-        mCanvas.drawBitmap(mRealBitmap, imageMatrix, mPaint)
+        mCanvas.drawBitmap(mRealBitmap, imageMatrix, paint)
         setImageBitmap(mRealBitmap)
-    }
+    }*/
 
     override fun onScroll(
         event1: MotionEvent,
@@ -217,8 +207,9 @@ class PaintImageView @JvmOverloads constructor(
 
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        //mScaleGestureDetector?.onTouchEvent(event)
         mGestureDetector?.onTouchEvent(event)
-        mScaleGestureDetector?.onTouchEvent(event)
+
 
         // Handle touch events here...
         when (event.action and MotionEvent.ACTION_MASK) {
@@ -252,10 +243,11 @@ class PaintImageView @JvmOverloads constructor(
     }
 
     private fun move(event : MotionEvent){
+        mScaling = false
         if (mode == DRAG) {
             upx = getPointerCoordinates(event)[0]
             upy = getPointerCoordinates(event)[1]
-            //mCanvas.drawLine(downx, downy, upx, upy, mPaint)
+            //mCanvas.drawLine(downx, downy, upx, upy, paint)
 
             //mLastPath.lineTo(event.x, event.y)
             mLastPath.lineTo(downx, downy)
@@ -264,16 +256,13 @@ class PaintImageView @JvmOverloads constructor(
             downx = upx
             downy = upy
         } else if (mode == ZOOM) {
-            if(mScaling) {
                 val newDist = spacing(event)
                 if (newDist > 10f) {
+                    mScaling = true
                     paintMatrix.set(mScrollAndDragMatrix)
                     val scale = newDist / oldDist
-                    //mPaint.strokeWidth = painStroke
+                    scaleFactor = scale
                     paintMatrix.postScale(scale, scale, mid.x, mid.y)
-                    imageMatrix.postScale(scale, scale, mid.x, mid.y)
-
-                }
             }
         }
     }
@@ -299,13 +288,15 @@ class PaintImageView @JvmOverloads constructor(
         //Draw
         downx = getPointerCoordinates(event)[0]
         downy = getPointerCoordinates(event)[1]
+        //mLastPath.moveTo(event.x, event.y)
+        //Second One
         mLastPath.moveTo(downx, downy)
-
+        //Original
+        //mLastPath.moveTo(downx.times(mid.x), downy.times(mid.y))
     }
 
     private fun actionPointerUp(){
         mode = NONE
-        mScaling = true
     }
 
     private fun actionPointerDown(event: MotionEvent){
@@ -342,34 +333,103 @@ class PaintImageView @JvmOverloads constructor(
 
     override fun onUndoDraw() {
         //restoreBitmap()
-        if (paths.size > 0) {
+        if (paths.size > 0 ) {
+            /*
+            //TODO For redo
             undonePaths.add(paths.removeAt(paths.size-1))
+            undonePaints.add(paints.removeAt(paints.size-1))*/
+            paths.removeAt(paths.size-1)
+            paints.removeAt(paints.size-1)
+            if(paints.size > 0) {
+                mPainter = paints[paints.size - 1]
+            }
             invalidate()
         }
     }
 
+
+    private var currentStroke = Painter.DEFAULT_STROKE
+    fun increaseStrokeSize(){
+        currentStroke += BRUSH_STROKE_RATION
+    }
+
+    fun decreaseStrokeSize(){
+        if(currentStroke > Painter.DEFAULT_STROKE) {
+            currentStroke -= BRUSH_STROKE_RATION
+        }
+    }
+
+    fun setDefaultStroke(){
+        currentStroke = Painter.DEFAULT_STROKE
+    }
     /**
      * With Path
      */
      override fun onDraw(canvas: Canvas) {
          super.onDraw(canvas)
+
+        canvas.save()
+        //canvas.scale(scaleFactor, scaleFactor, width / 2f, height / 2f)
+        //canvas.translate(scrollX.toFloat(), scrollY.toFloat())
+        //matrix.postTranslate(mid.x, mid.y)
+        //canvas.scale(scaleFactor, scaleFactor)
+        //clipBounds = canvas.clipBounds
+        /*if (::mRealBitmap.isInitialized) {
+
+            canvas.drawBitmap(mRealBitmap, 0f, 0f, paint)
+        }
+        setPaintValue(paint)*/
+
+        // first update the canvas bitmap
+        //setPaintValue(mPaint)
+        for (i in paths.indices) {
+
+            //draw depending on scroll and drag
+            val p =  Path()
+            p.addPath(paths[i], paintMatrix)
+            p.transform(paintMatrix)
+            canvas.drawPath(p, paints[i].paint)
+        }
+        // then draw it on top of the image
+        //setDefaultPaint()
+        if(::mRealBitmap.isInitialized) {
+            //with screen canvas proportios
+            //canvas.drawBitmap(mRealBitmap, null, destImageRect, paint)
+            //with image proportions :
+            canvas.drawBitmap(mRealBitmap, paintMatrix, mImagePainter.paint)
+        }
+        //setPaintValue(mPaint)
+        canvas.restore()
+
+
+/*
          for (i in paths.indices) {
 
              //draw depending on scroll and drag
              val p =  Path()
              p.addPath(paths[i], imageMatrix)
 
+             /*if(scaleFactor <= 1) {
+                 paints[i].strokeWidth = scaleFactor?.times(DEFAULT_STROKE)
+             }*/
              //paths[i].transform(paintMatrix)
              canvas.drawPath(p, paints[i])
-         }
+         }*/
      }
 
     private fun getNewPathPen() {
         mLastPath = Path()
         paths.add(mLastPath)
-        val paint = Paint()
-        mPaint = paint
-        createPaint()
-        paints.add(paint)
+        mPainter = Painter()
+        mPainter.changeStrokeTo(currentStroke)
+        mPainter.setEraseMode(mEraseMode)
+        paints.add(mPainter)
+    }
+
+    private lateinit var destImageRect : Rect
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        //when size changed, store the new size
+        destImageRect = Rect(0, 0, w, h)
     }
 }
