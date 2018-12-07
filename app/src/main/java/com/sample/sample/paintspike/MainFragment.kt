@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.*
+import android.widget.SeekBar
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.fragment_main.*
 import com.bumptech.glide.request.target.SimpleTarget
@@ -59,6 +60,25 @@ class MainFragment : Fragment(){
         fab_restore.setOnClickListener{
             img_photo.setDefaultStroke()
         }
+        paint_stroke_seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            var progressChangedValue = 15
+
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if(progress < 15){
+                    progressChangedValue = 15
+                }else{
+                    progressChangedValue = progress + 5
+                }
+                img_photo.setStrokeValue(progressChangedValue)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            }
+
+        })
     }
 
 

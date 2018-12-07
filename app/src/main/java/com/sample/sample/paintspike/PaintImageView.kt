@@ -359,6 +359,10 @@ class PaintImageView @JvmOverloads constructor(
         }
     }
 
+    fun setStrokeValue(stroke : Int){
+        currentStroke = stroke + 5f
+    }
+
     fun setDefaultStroke(){
         currentStroke = Painter.DEFAULT_STROKE
     }
