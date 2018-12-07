@@ -1,6 +1,9 @@
 package com.sample.sample.paintspike
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -25,7 +28,6 @@ class MainFragment : Fragment(){
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?):
             View? = inflater.inflate(R.layout.fragment_main, container, false)
 
-
     private var showFabMenuItems = true
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -35,7 +37,7 @@ class MainFragment : Fragment(){
             .load(Uri.parse("file:///android_asset/psoriasis.jpg"))
             .into(object : SimpleTarget<Bitmap>() {
                 override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    img_photo.setNewImage(resource, resource)
+                    img_photo.setNewImage(resource)
                 }
             })
 
@@ -60,16 +62,14 @@ class MainFragment : Fragment(){
         fab_restore.setOnClickListener{
             img_photo.setDefaultStroke()
         }
+
         paint_stroke_seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
             var progressChangedValue = 15
 
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if(progress < 15){
-                    progressChangedValue = 15
-                }else{
-                    progressChangedValue = progress + 5
-                }
+                progressChangedValue = if(progress < 15){ 15 }else{ progress + 5 }
                 img_photo.setStrokeValue(progressChangedValue)
+                preview_circle_stroke.setCircleSize(progressChangedValue)
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {

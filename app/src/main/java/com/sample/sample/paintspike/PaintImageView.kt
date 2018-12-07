@@ -35,8 +35,8 @@ class PaintImageView @JvmOverloads constructor(
 
     private val paths = ArrayList<Path>()
     private val paints = ArrayList<Painter>()
-    private val undonePaths = ArrayList<Path>()
-    private val undonePaints = ArrayList<Paint>()
+    //private val undonePaths = ArrayList<Path>()
+    //private val undonePaints = ArrayList<Paint>()
 
     /**
      * Gestures to Zoom and Drag canvas matrix
@@ -49,10 +49,10 @@ class PaintImageView @JvmOverloads constructor(
     private var upx = 0f
     private var upy = 0f
 
-    var lastFocusX: Float = 0f
-    var lastFocusY: Float = 0f
+    //var lastFocusX: Float = 0f
+    //var lastFocusY: Float = 0f
 
-    private lateinit var mCanvas: Canvas
+    //private lateinit var mCanvas: Canvas
     private var paintMatrix: Matrix = Matrix()
 
     private var mode = NONE
@@ -73,10 +73,8 @@ class PaintImageView @JvmOverloads constructor(
         const val ZOOM = 2
         const val BRUSH_STROKE_RATION = 10f
 
-        private const val MIN_ZOOM = 1f
-        private const val MAX_ZOOM = 10f
-
-        private const val PAINT_COLOR = "#66265c88"
+        //private const val MIN_ZOOM = 1f
+        //private const val MAX_ZOOM = 10f
     }
 
     init {
@@ -149,14 +147,14 @@ class PaintImageView @JvmOverloads constructor(
     }
 
     private lateinit var mRealBitmap : Bitmap
-    fun setNewImage(alteredBitmap: Bitmap, bmp: Bitmap) {
+    fun setNewImage(alteredBitmap: Bitmap) {
         mRealBitmap = alteredBitmap
         /*mCanvas = Canvas(alteredBitmap)
         mCanvas.drawBitmap(bmp, imageMatrix, paint)
 
         setImageBitmap(alteredBitmap)*/
-        val canvasBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        mCanvas = Canvas(canvasBitmap)
+        //val canvasBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        //mCanvas = Canvas(canvasBitmap)
         invalidate()
         /*mCanvas = Canvas()
         val mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -219,24 +217,6 @@ class PaintImageView @JvmOverloads constructor(
             MotionEvent.ACTION_POINTER_UP -> actionPointerUp()
             MotionEvent.ACTION_MOVE -> move(event)
         }
-
-
-        //Paint sample
-        /*
-        val x = event.x
-        val y = event.y
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                getNewPathPen()
-                mLastPath.moveTo(x, y)
-            }
-            MotionEvent.ACTION_MOVE -> {
-                mLastPath.lineTo(x, y)
-            }
-            MotionEvent.ACTION_UP -> {
-            }
-        }*/
-        //invalidate()
         imageMatrix = paintMatrix
         invalidate()
         return true
@@ -247,7 +227,6 @@ class PaintImageView @JvmOverloads constructor(
         if (mode == DRAG) {
             upx = getPointerCoordinates(event)[0]
             upy = getPointerCoordinates(event)[1]
-            //mCanvas.drawLine(downx, downy, upx, upy, paint)
 
             //mLastPath.lineTo(event.x, event.y)
             mLastPath.lineTo(downx, downy)
@@ -288,8 +267,8 @@ class PaintImageView @JvmOverloads constructor(
         //Draw
         downx = getPointerCoordinates(event)[0]
         downy = getPointerCoordinates(event)[1]
+
         //mLastPath.moveTo(event.x, event.y)
-        //Second One
         mLastPath.moveTo(downx, downy)
         //Original
         //mLastPath.moveTo(downx.times(mid.x), downy.times(mid.y))
@@ -335,7 +314,7 @@ class PaintImageView @JvmOverloads constructor(
         //restoreBitmap()
         if (paths.size > 0 ) {
             /*
-            //TODO For redo
+            //TODO For redo if needed
             undonePaths.add(paths.removeAt(paths.size-1))
             undonePaints.add(paints.removeAt(paints.size-1))*/
             paths.removeAt(paths.size-1)
@@ -360,7 +339,7 @@ class PaintImageView @JvmOverloads constructor(
     }
 
     fun setStrokeValue(stroke : Int){
-        currentStroke = stroke + 5f
+        currentStroke = stroke + 15f
     }
 
     fun setDefaultStroke(){
@@ -374,6 +353,7 @@ class PaintImageView @JvmOverloads constructor(
 
         canvas.save()
         //canvas.scale(scaleFactor, scaleFactor, width / 2f, height / 2f)
+        canvas.scale(scaleFactor, scaleFactor)
         //canvas.translate(scrollX.toFloat(), scrollY.toFloat())
         //matrix.postTranslate(mid.x, mid.y)
         //canvas.scale(scaleFactor, scaleFactor)
@@ -386,12 +366,13 @@ class PaintImageView @JvmOverloads constructor(
 
         // first update the canvas bitmap
         //setPaintValue(mPaint)
+        matrix.setScale(scaleFactor, scaleFactor)
         for (i in paths.indices) {
 
             //draw depending on scroll and drag
             val p =  Path()
-            p.addPath(paths[i], paintMatrix)
-            p.transform(paintMatrix)
+            p.addPath(paths[i], matrix)
+            //p.transform(matrix)
             canvas.drawPath(p, paints[i].paint)
         }
         // then draw it on top of the image
@@ -399,8 +380,7 @@ class PaintImageView @JvmOverloads constructor(
         if(::mRealBitmap.isInitialized) {
             //with screen canvas proportios
             //canvas.drawBitmap(mRealBitmap, null, destImageRect, paint)
-            //with image proportions :
-            canvas.drawBitmap(mRealBitmap, paintMatrix, mImagePainter.paint)
+            canvas.drawBitmap(mRealBitmap, matrix, mImagePainter.paint)
         }
         //setPaintValue(mPaint)
         canvas.restore()
@@ -434,6 +414,6 @@ class PaintImageView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         //when size changed, store the new size
-        destImageRect = Rect(0, 0, w, h)
+        //destImageRect = Rect(0, 0, w, h)
     }
 }

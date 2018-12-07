@@ -2,6 +2,7 @@ package com.sample.sample.paintspike.CustomViews
 
 import android.content.Context
 import android.graphics.Canvas
+import android.os.Build
 import android.view.MotionEvent
 import android.util.AttributeSet
 import android.util.Log
@@ -29,11 +30,14 @@ class VerticalSeekBar : SeekBar {
     override fun onDraw(c: Canvas) {
         c.rotate(-90f)
         c.translate(-height.toFloat(), 0f)
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            min = 15
+        }
         super.onDraw(c)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        super.onTouchEvent(event)
         if (!isEnabled) {
             return false
         }

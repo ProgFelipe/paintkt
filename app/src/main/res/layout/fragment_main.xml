@@ -12,6 +12,15 @@
             app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
+    <com.sample.sample.paintspike.CustomViews.StrokeCircle
+            android:id="@+id/preview_circle_stroke"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
     <com.sample.sample.paintspike.CustomViews.VerticalSeekBar
             android:id="@+id/paint_stroke_seek_bar"
             android:layout_width="wrap_content"
