@@ -225,8 +225,8 @@ class PaintImageView @JvmOverloads constructor(
     private fun move(event : MotionEvent){
         mScaling = false
         if (mode == DRAG) {
-            upx = getPointerCoordinates(event)[0]
-            upy = getPointerCoordinates(event)[1]
+            upx = getPointerCoordinates(event)[0] / scaleFactor
+            upy = getPointerCoordinates(event)[1] / scaleFactor
 
             //mLastPath.lineTo(event.x, event.y)
             mLastPath.lineTo(downx, downy)
@@ -265,8 +265,8 @@ class PaintImageView @JvmOverloads constructor(
         mode = DRAG
 
         //Draw
-        downx = getPointerCoordinates(event)[0]
-        downy = getPointerCoordinates(event)[1]
+        downx = getPointerCoordinates(event)[0] / scaleFactor
+        downy = getPointerCoordinates(event)[1] / scaleFactor
 
         //mLastPath.moveTo(event.x, event.y)
         mLastPath.moveTo(downx, downy)
@@ -352,6 +352,7 @@ class PaintImageView @JvmOverloads constructor(
          super.onDraw(canvas)
 
         canvas.save()
+        canvas.translate(scrollX.toFloat(), scrollY.toFloat())
         //canvas.scale(scaleFactor, scaleFactor, width / 2f, height / 2f)
         canvas.scale(scaleFactor, scaleFactor)
         //canvas.translate(scrollX.toFloat(), scrollY.toFloat())
@@ -361,8 +362,7 @@ class PaintImageView @JvmOverloads constructor(
         /*if (::mRealBitmap.isInitialized) {
 
             canvas.drawBitmap(mRealBitmap, 0f, 0f, paint)
-        }
-        setPaintValue(paint)*/
+        }*/
 
         // first update the canvas bitmap
         //setPaintValue(mPaint)
